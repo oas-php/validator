@@ -1,0 +1,55 @@
+[
+    {
+        "description": "schema with patternProperties",
+        "schema": {
+            "patternProperties": {
+                "f.*o": {
+                    "type": "boolean"
+                },
+                "^bar": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tests": [
+            {
+                "description": "non-object instances are ignored",
+                "data": "string should be ignored",
+                "violations": []
+            },
+            {
+                "description": "property matches the pattern and validates against schema",
+                "data": {
+                    "foo": true
+                },
+                "violations": []
+            },
+            {
+                "description": "none of properties matches any pattern",
+                "data": {
+                    "baz": 10
+                },
+                "violations": []
+            },
+            {
+                "description": "property matches the pattern but does not validate against schema",
+                "data": {
+                    "fffrroo": 10,
+                    "bario": "this should be string!"
+                },
+                "violations": [
+                    [
+                        "#\/patternProperties\/f.*o\/type",
+                        "#\/fffrroo",
+                        "Type::INVALID_TYPE_ERROR"
+                    ],
+                    [
+                        "#\/patternProperties\/^bar\/type",
+                        "#\/bario",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    }
+]

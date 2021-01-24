@@ -1,0 +1,138 @@
+[
+    {
+        "description": "'if' without 'then' nor 'else' block",
+        "schema": {
+            "if": {
+                "type": "integer"
+            }
+        },
+        "tests": [
+            {
+                "description": "'if' schema does not validates and 'else' schema is missing",
+                "data": "not-integer",
+                "violations": []
+            },
+            {
+                "description": "'if' schema validates but 'then' schema is missing",
+                "data": "10",
+                "violations": []
+            }
+        ]
+    },
+    {
+        "description": "'if' with 'then' block",
+        "schema": {
+            "if": {
+                "type": "integer"
+            },
+            "then": {
+                "maximum": 10
+            }
+        },
+        "tests": [
+            {
+                "description": "'if' schema does not validates and 'else' schema is missing",
+                "data": "not-integer",
+                "violations": []
+            },
+            {
+                "description": "'if' schema validates as well as 'else' schema does",
+                "data": 10,
+                "violations": []
+            },
+            {
+                "description": "'if' schema validates but 'else' schema does not",
+                "data": 100,
+                "violations": [
+                    [
+                        "#\/then\/maximum",
+                        "#\/",
+                        "Maximum::TOO_HIGH_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "'if' with 'else' block",
+        "schema": {
+            "if": {
+                "type": "integer"
+            },
+            "else": {
+                "type": "string"
+            }
+        },
+        "tests": [
+            {
+                "description": "'if' schema validates and 'then' schema is missing",
+                "data": "10",
+                "violations": []
+            },
+            {
+                "description": "'if' schema does not validate but 'else' schema does",
+                "data": "not-integer",
+                "violations": []
+            },
+            {
+                "description": "'if' schema does not validate neither 'else' schema does",
+                "data": true,
+                "violations": [
+                    [
+                        "#\/else\/type",
+                        "#\/",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "'if' with 'then' and 'else' block",
+        "schema": {
+            "if": {
+                "type": "integer"
+            },
+            "then": {
+                "maximum": 10
+            },
+            "else": {
+                "type": "string"
+            }
+        },
+        "tests": [
+            {
+                "description": "'if' schema validates as well as 'then' schema does",
+                "data": 10,
+                "violations": []
+            },
+            {
+                "description": "'if' schema does not validate but 'then' schema does",
+                "data": "not-integer",
+                "violations": []
+            },
+            {
+                "description": "'if' schema validates but 'then' schema does not",
+                "data": 11,
+                "violations": [
+                    [
+                        "#\/then\/maximum",
+                        "#\/",
+                        "Maximum::TOO_HIGH_ERROR"
+                    ]
+                ]
+            },
+            {
+                "description": "'if' schema does not validate neither 'then' schema does",
+                "data": true,
+                "violations": [
+                    [
+                        "#\/else\/type",
+                        "#\/",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    }
+]

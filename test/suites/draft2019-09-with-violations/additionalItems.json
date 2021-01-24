@@ -1,0 +1,140 @@
+[
+    {
+        "description": "'additionalItems' set to false has no effect without 'items'",
+        "schema": {
+            "additionalItems": false
+        },
+        "tests": [
+            {
+                "description": "instance which is not an array is ignored",
+                "data": 1,
+                "violations": []
+            },
+            {
+                "description": "additional items are not allowed but instance validates without items declaration",
+                "data": [1, 2, {}],
+                "violations": []
+            }
+        ]
+    },
+    {
+        "description": "'additionalItems' set to true has no effect without 'items'",
+        "schema": {
+            "additionalItems": true
+        },
+        "tests": [
+            {
+                "description": "instance which is not an array is ignored",
+                "data": 1,
+                "violations": []
+            },
+            {
+                "description": "additional items are allowed",
+                "data": [1, 2, {}],
+                "violations": []
+            }
+        ]
+    },
+    {
+        "description": "'additionalItems' set to true has no effect when 'items' is a schema",
+        "schema": {
+            "items": {
+                "type": "integer"
+            },
+            "additionalItems": true
+        },
+        "tests": [
+            {
+                "description": "third item is not an integer!",
+                "data": [1, 2, {}],
+                "violations": [
+                    [
+                        "#\/items/type",
+                        "#\/2",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "'additionalItems' set to false when 'items' is an array",
+        "schema": {
+            "items": [
+                {"type": "integer"},
+                {"const": "foo"}
+            ],
+            "additionalItems": false
+        },
+        "tests": [
+            {
+                "description": "instance has no additional item",
+                "data": [1, "foo"],
+                "violations": []
+            },
+            {
+                "description": "instance has additional item but it is not allowed",
+                "data": [1, "foo", "bar"],
+                "violations": [
+                    [
+                        "#\/additionalItems",
+                        "#\/2",
+                        "AdditionalItems::UNEXPECTED_ITEM_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "'additionalItems' set to true when 'items' is an array",
+        "schema": {
+            "items": [
+                {"type": "integer"},
+                {"const": "foo"}
+            ],
+            "additionalItems": true
+        },
+        "tests": [
+            {
+                "description": "instance has additional item but it is allowed",
+                "data": [1, "foo"],
+                "violations": []
+            }
+        ]
+    },
+    {
+        "description": "'additionalItems' is a schema and 'items' is an array",
+        "schema": {
+            "items": [
+                {"type": "integer"},
+                {"const": "foo"}
+            ],
+            "additionalItems": {
+                "const": "bar"
+            }
+        },
+        "tests": [
+            {
+                "description": "instance has no additional items",
+                "data": [1, "foo"],
+                "violations": []
+            },
+            {
+                "description": "instance has additional item but it matches the schema",
+                "data": [1, "foo", "bar"],
+                "violations": []
+            },
+            {
+                "description": "instance has additional item but it does not match the schema",
+                "data": [1, "foo", "baz"],
+                "violations": [
+                    [
+                        "#\/additionalItems/const",
+                        "#\/2",
+                        "Constant::VALUE_MISMATCH_ERROR"
+                    ]
+                ]
+            }
+        ]
+    }
+]

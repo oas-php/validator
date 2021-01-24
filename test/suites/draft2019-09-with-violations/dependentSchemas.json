@@ -1,0 +1,63 @@
+[
+    {
+        "description": "dependent schemas",
+        "schema": {
+            "dependentSchemas": {
+                "foo": {
+                    "minProperties": 3
+                },
+                "bar": {
+                    "type": "integer"
+                }
+            }
+        },
+        "tests": [
+            {
+                "description": "",
+                "data": "non-object instances are ignored",
+                "violations": []
+            },
+            {
+                "description": "instance validates against conditional 'foo' schema",
+                "data": {
+                    "foo": 10,
+                    "baz": "valid!",
+                    "tex": "oiga muchacha!"
+                },
+                "violations": []
+            },
+            {
+                "description": "instance does not validates against conditional 'bar' schema",
+                "data": {
+                    "bar": 10
+                },
+                "violations": [
+                    [
+                        "#\/dependentSchemas\/bar\/type",
+                        "#\/",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            },
+            {
+                "description": "instance does not validates against dependent schemas",
+                "data": {
+                    "foo": [],
+                    "bar": 10
+                },
+                "violations": [
+                    [
+                        "#\/dependentSchemas\/foo\/minProperties",
+                        "#\/",
+                        "MinProperties::TOO_FEW_ERROR"
+                    ],
+                    [
+                        "#\/dependentSchemas\/bar\/type",
+                        "#\/",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    }
+]

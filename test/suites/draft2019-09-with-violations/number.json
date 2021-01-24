@@ -1,0 +1,195 @@
+[
+    {
+        "description": "schema with \"number\" type",
+        "schema": {
+            "type": "number"
+        },
+        "tests": [
+            {
+                "description": "integer validates against \"number\" type",
+                "data": 1,
+                "violations": []
+            },
+            {
+                "description": "float validates against \"number\" type",
+                "data": 1,
+                "violations": []
+            },
+            {
+                "description": "string which looks like number is invalid",
+                "data": "1.0",
+                "violations": [
+                    [
+                        "#\/type",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"multipleOf\" constraint",
+        "schema": {
+            "multipleOf": 10
+        },
+        "tests": [
+            {
+                "description": "the same integer is always multiple of itself",
+                "data": 10,
+                "violations": []
+            },
+            {
+                "description": "100 is multiple of 10",
+                "data": 100,
+                "violations": []
+            },
+            {
+                "description": "valid because type annotation omitted: \"multipleOf\" constraint is ignored",
+                "data": "lorem ipsum",
+                "violations": []
+            },
+            {
+                "description": "101 is not multiple of 10",
+                "data": 101,
+                "violations": [
+                    [
+                        "#\/multipleOf",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"minimum\" constraint",
+        "schema": {
+            "minimum": 10
+        },
+        "tests": [
+            {
+                "description": "10 is greater or equal to required minimum of 10: minimum is inclusive",
+                "data": 10,
+                "violations": []
+            },
+            {
+                "description": "100 is greater or equal to required minimum of 10",
+                "data": 100,
+                "violations": []
+            },
+            {
+                "description": "valid because type annotation omitted: \"minimum\" constraint is ignored",
+                "data": "lorem ipsum",
+                "violations": []
+            },
+            {
+                "description": "9 is not greater or equal to required minimum of 10",
+                "data": 9,
+                "violations": [
+                    [
+                        "#\/minimum",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"exclusiveMinimum\" constraint",
+        "schema": {
+            "exclusiveMinimum": 10
+        },
+        "tests": [
+            {
+                "description": "11 is greater than required minimum of 10",
+                "data": 11,
+                "violations": []
+            },
+            {
+                "description": "100 is greater that required minimum of 10",
+                "data": 100,
+                "violations": []
+            },
+            {
+                "description": "valid because type annotation omitted: \"exclusiveMinimum\" constraint is ignored",
+                "data": "lorem ipsum",
+                "violations": []
+            },
+            {
+                "description": "10 is not greater than required minimum of 10",
+                "data": 10,
+                "violations": [
+                    [
+                        "#\/exclusiveMinimum",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"maximum\" constraint",
+        "schema": {
+            "maximum": 10
+        },
+        "tests": [
+            {
+                "description": "10 is lesser or equal to required maximum of 10: maximum is inclusive",
+                "data": 10,
+                "violations": []
+            },
+            {
+                "description": "1 is lesser or equal to required maximum of 10",
+                "data": 1,
+                "violations": []
+            },
+            {
+                "description": "valid because type annotation omitted: \"maximum\" constraint is ignored",
+                "data": "lorem ipsum",
+                "violations": []
+            },
+            {
+                "description": "100 is not lesser or equal to required maximum of 10",
+                "data": 100,
+                "violations": [
+                    [
+                        "#\/maximum",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"exclusiveMaximum\" constraint",
+        "schema": {
+            "exclusiveMaximum": 10
+        },
+        "tests": [
+            {
+                "description": "9 is lesser than required maximum of 10",
+                "data": 9,
+                "violations": []
+            },
+            {
+                "description": "1 is lesser than required maximum of 10",
+                "data": 1,
+                "violations": []
+            },
+            {
+                "description": "valid because type annotation omitted: \"exclusiveMaximum\" constraint is ignored",
+                "data": "lorem ipsum",
+                "violations": []
+            },
+            {
+                "description": "10 is not lesser than required maximum of 10",
+                "data": 10,
+                "violations": [
+                    [
+                        "#\/exclusiveMaximum",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    }
+]
