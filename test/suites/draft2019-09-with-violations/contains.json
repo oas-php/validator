@@ -1,0 +1,185 @@
+[
+    {
+        "description": "schema with \"contains\"",
+        "schema": {
+            "contains": {
+                "type": "integer"
+            }
+        },
+        "tests": [
+            {
+                "description": "collection contains an element which validates against schema",
+                "data": [
+                    1,
+                    true,
+                    false
+                ],
+                "violations": []
+            },
+            {
+                "description": "collection does not contain an element which validates against schema",
+                "data": [
+                    true,
+                    false
+                ],
+                "violations": [
+                    [
+                        "#\/contains",
+                        "#\/",
+                        "Contains::NO_ITEM_MATCHES_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"contains\", \"minContains\" and \"maxContains\"",
+        "schema": {
+            "maxContains": 3,
+            "minContains": 1,
+            "contains": {
+                "type": "integer"
+            }
+        },
+        "tests": [
+            {
+                "description": "non-arrays are ignored",
+                "data": "string should be ignored!",
+                "violations": []
+            },
+            {
+                "description": "amount of items which validates against schema is in range",
+                "data": [
+                    1,
+                    2,
+                    "",
+                    true
+                ],
+                "violations": []
+            },
+            {
+                "description": "amount of items which validates against schema is lower than fixed minimum",
+                "data": [],
+                "violations": [
+                    [
+                        "#\/minContains",
+                        "#\/",
+                        "MinContains::TOO_FEW_ERROR"
+                    ]
+                ]
+            },
+            {
+                "description": "amount of items which validates against schema is greater than fixed maximum",
+                "data": [
+                    1,
+                    2,
+                    3,
+                    4
+                ],
+                "violations": [
+                    [
+                        "#\/maxContains",
+                        "#\/",
+                        "MaxContains::TOO_MANY_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"contains\" and \"minContains\" set to 0",
+        "schema": {
+            "minContains": 0,
+            "contains": {
+                "type": "integer"
+            }
+        },
+        "tests": [
+            {
+                "description": "collection does not contain an element which validates against schema",
+                "data": [],
+                "violations": []
+            },
+            {
+                "description": "collection contains an element which validates against schema",
+                "data": [
+                    "true",
+                    1,
+                    false,
+                    {}
+                ],
+                "violations": []
+            }
+        ]
+    },
+    {
+        "description": "schema with \"contains\" and \"maxContains\"",
+        "schema": {
+            "maxContains": 2,
+            "contains": {
+                "type": "integer"
+            }
+        },
+        "tests": [
+            {
+                "description": "amount of items which validates against schema does not exceed the fixed maximum",
+                "data": [
+                    1,
+                    true,
+                    {}
+                ],
+                "violations": []
+            },
+            {
+                "description": "collection does not contain an element which validates against schema",
+                "data": [],
+                "violations": [
+                    [
+                        "#\/contains",
+                        "#\/",
+                        "Contains::NO_ITEM_MATCHES_ERROR"
+                    ]
+                ]
+            },
+            {
+                "description": "amount of items which validates against schema exceeds the fixed maximum",
+                "data": [
+                    1,
+                    2,
+                    3
+                ],
+                "violations": [
+                    [
+                        "#\/maxContains",
+                        "#\/",
+                        "MaxContains::TOO_MANY_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"minContains\" and \"maxContains\" but without \"contains\"",
+        "schema": {
+            "maxContains": 3,
+            "minContains": 1
+        },
+        "tests": [
+            {
+                "description": "\"minContains\" and \"maxContains\" are ignored without \"contains\" (1)",
+                "data": [],
+                "violations": []
+            },
+            {
+                "description": "\"minContains\" and \"maxContains\" are ignored without \"contains\" (2)",
+                "data": [
+                    1,
+                    true,
+                    9,
+                    {}
+                ],
+                "violations": []
+            }
+        ]
+    }
+]

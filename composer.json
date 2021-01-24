@@ -1,0 +1,36 @@
+{
+  "name": "oas-php/validator",
+  "description": "OAS Schema Validator",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+      {
+        "name": "Kuba Biernacki",
+        "email": "kubiernacki@gmail.com"
+      }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "ext-json": "*",
+    "nikic/iter": "^2.0",
+    "symfony/validator": "^5.1 || ^6.0",
+    "oas-php/schema": "dev-master",
+    "oas-php/resolver": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "OAS\\": "src/"
+    },
+    "files": [
+      "src/Validator/functions.php"
+    ]
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0",
+    "guzzlehttp/psr7": "^1.7"
+  },
+  "suggest": {
+    "ext-bcmath": "to validate multipleOf constraint with better precision",
+    "symfony/translation": "to translate error messages"
+  }
+}

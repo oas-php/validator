@@ -1,0 +1,114 @@
+[
+    {
+        "description": "schema with \"string\" type",
+        "schema": {
+            "type": "string"
+        },
+        "tests": [
+            {
+                "description": "empty string is a valid string",
+                "data": "",
+                "violations": []
+            },
+            {
+                "description": "not empty string is a valid string",
+                "data": "not empty",
+                "violations": []
+            },
+            {
+                "description": "10 is of integer type not a string",
+                "data": 10,
+                "violations": [
+                    [
+                        "#\/type",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"minLength\" constraint",
+        "schema": {
+            "minLength": 3
+        },
+        "tests": [
+            {
+                "description": "string length is greater or equal to required minimum of 3",
+                "data": "ABC",
+                "violations": []
+            },
+            {
+                "description": "valid because type annotation omitted: \"minLength\" constraint is ignored",
+                "data": {},
+                "violations": []
+            },
+            {
+                "description": "string length is not greater or equal to required minimum of 3",
+                "data": "A",
+                "violations": [
+                    [
+                        "#\/minLength",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"minLength\" constraint",
+        "schema": {
+            "maxLength": 3
+        },
+        "tests": [
+            {
+                "description": "string length is lesser or equal to required maximum of 3",
+                "data": "ABC",
+                "violations": []
+            },
+            {
+                "description": "valid because type annotation omitted: \"maxLength\" constraint is ignored",
+                "data": {},
+                "violations": []
+            },
+            {
+                "description": "string length is not lesser or equal to required maximum of 3",
+                "data": "ABCD",
+                "violations": [
+                    [
+                        "#\/maxLength",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "schema with \"pattern\" constraint",
+        "schema": {
+            "pattern": "fo+bar"
+        },
+        "tests": [
+            {
+                "description": "instance matches the pattern",
+                "data": "foooooooobar",
+                "violations": []
+            },
+            {
+                "description": "valid because type annotation omitted: \"pattern\" constraint is ignored",
+                "data": false,
+                "violations": []
+            },
+            {
+                "description": "instance does not match the pattern",
+                "data": "bar",
+                "violations": [
+                    [
+                        "#\/pattern",
+                        "#\/"
+                    ]
+                ]
+            }
+        ]
+    }
+]

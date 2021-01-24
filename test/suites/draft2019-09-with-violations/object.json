@@ -1,0 +1,59 @@
+[
+  {
+    "description": "schema with \"dependentRequired\" constraint",
+    "schema": {
+      "dependentRequired": {
+        "foo": ["bar"],
+        "bar": ["baz"],
+        "baz": ["var"],
+        "var": []
+      }
+    },
+    "tests": [
+      {
+        "description": "valid because type annotation omitted: \"dependentRequired\" constraint is ignored",
+        "data": false,
+        "violations": []
+      },
+      {
+        "description": "no property with dependencies is present",
+        "data": {},
+        "violations": []
+      },
+      {
+        "description": "\"var\" depends on no other properties",
+        "data": {"var":  true},
+        "violations": []
+      },
+      {
+        "description": "required \"bar\" properties are present",
+        "data": {"baz": 10, "var":  true},
+        "violations": []
+      },
+      {
+        "description": "required \"foo\" properties are present",
+        "data": {"baz": 10, "var":  true, "foo": "bar"},
+        "violations": [
+            [
+              "#/dependentRequired",
+              "#/"
+            ]
+        ]
+      },
+      {
+        "description": "required \"foo\" & \"baz\" properties are present",
+        "data": {"foo": "bar", "baz": 10},
+        "violations": [
+          [
+            "#/dependentRequired",
+            "#/"
+          ],
+          [
+            "#/dependentRequired",
+            "#/"
+          ]
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,243 @@
+[
+    {
+        "description": "'additionalProperties' set to false",
+        "schema": {
+            "additionalProperties": false
+        },
+        "tests": [
+            {
+                "description": "instance which is not an object is ignored",
+                "data": 1,
+                "violations": []
+            },
+            {
+                "description": "empty objects validates",
+                "data": {},
+                "violations": []
+            },
+            {
+                "description": "no properties are allowed",
+                "data": {
+                    "foo": 1,
+                    "baz": false,
+                    "bar": {}
+                },
+                "violations": [
+                    [
+                        "#\/additionalProperties",
+                        "#\/foo",
+                        "AdditionalProperties::UNEXPECTED_PROPERTY_ERROR"
+                    ],
+                    [
+                        "#\/additionalProperties",
+                        "#\/baz",
+                        "AdditionalProperties::UNEXPECTED_PROPERTY_ERROR"
+                    ],
+                    [
+                        "#\/additionalProperties",
+                        "#\/bar",
+                        "AdditionalProperties::UNEXPECTED_PROPERTY_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "'additionalProperties' set to true",
+        "schema": {
+            "additionalItems": true
+        },
+        "tests": [
+            {
+                "description": "instance which is not an object is ignored",
+                "data": 1,
+                "violations": []
+            },
+            {
+                "description": "any property is allowed",
+                "data": {
+                    "foo": 1,
+                    "baz": false,
+                    "bar": {}
+                },
+                "violations": []
+            }
+        ]
+    },
+    {
+        "description": "'additionalProperties' is a schema",
+        "schema": {
+            "additionalProperties": {
+                "properties": {
+                    "foo": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "tests": [
+            {
+                "description": "empty object validates",
+                "data": {},
+                "violations": [
+                ]
+            },
+            {
+                "description": "additional property doesn't match the schema",
+                "data": {
+                    "additional1": {
+                        "foo": true
+                    },
+                    "additional2": {
+                        "foo": false
+                    },
+                    "additional3": {
+                        "foo": []
+                    }
+                },
+                "violations": [
+                    [
+                        "#\/additionalProperties\/properties\/foo\/type",
+                        "#\/additional3\/foo",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "'additionalProperties' is a schema combined with 'properties'",
+        "schema": {
+            "properties": {
+                "foo": {
+                    "type": "string"
+                },
+                "bar": {
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": {
+                "type": "number"
+            }
+        },
+        "tests": [
+            {
+                "description": "empty object validates",
+                "data": {},
+                "violations": [
+                ]
+            },
+            {
+                "description": "additional property matches the schema",
+                "data": {
+                    "foo": "it's valid",
+                    "bar": false,
+                    "baz": 1
+                },
+                "violations": []
+            },
+            {
+                "description": "additional property doesn't match the schema",
+                "data": {
+                    "foo": "it's valid",
+                    "bar": false,
+                    "baz": "it's invalid"
+                },
+                "violations": [
+                    [
+                        "#\/additionalProperties\/type",
+                        "#\/baz",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "'additionalProperties' is a schema combined with 'patternProperties'",
+        "schema": {
+            "patternProperties": {
+                "ba.": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": {
+                "type": "object"
+            }
+        },
+        "tests": [
+            {
+                "description": "additional property matches the schema",
+                "data": {
+                    "bar": "woo hoo",
+                    "baz": "ohh yeah",
+                    "foo": {}
+                },
+                "violations": [
+                ]
+            },
+            {
+                "description": "additional property doesn't match the schema",
+                "data": {
+                    "bar": "woo hoo",
+                    "baz": "ohh yeah",
+                    "foo": "puff"
+                },
+                "violations": [
+                    [
+                        "#\/additionalProperties\/type",
+                        "#\/foo",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    },
+    {
+        "description": "'additionalProperties' is a schema combined with 'properties' and 'patternProperties'",
+        "schema": {
+            "properties": {
+                "foo": {
+                    "type": "array"
+                }
+            },
+            "patternProperties": {
+                "ba.": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": {
+                "type": "object"
+            }
+        },
+        "tests": [
+            {
+                "description": "additional property matches the schema",
+                "data": {
+                    "bar": "woo hoo",
+                    "baz": "ohh yeah",
+                    "foo": [],
+                    "coo": {}
+                },
+                "violations": [
+                ]
+            },
+            {
+                "description": "additional property doesn't match the schema",
+                "data": {
+                    "bar": "woo hoo",
+                    "baz": "ohh yeah",
+                    "foo": [],
+                    "boo": null
+                },
+                "violations": [
+                    [
+                        "#\/additionalProperties\/type",
+                        "#\/boo",
+                        "Type::INVALID_TYPE_ERROR"
+                    ]
+                ]
+            }
+        ]
+    }
+]
