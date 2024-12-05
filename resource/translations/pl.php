@@ -4,6 +4,7 @@ use OAS\Validator\Constraints\AdditionalItems;
 use OAS\Validator\Constraints\AdditionalProperties;
 use OAS\Validator\Constraints\AllOf;
 use OAS\Validator\Constraints\AnyOf;
+use OAS\Validator\Constraints\Boolean;
 use OAS\Validator\Constraints\Constant;
 use OAS\Validator\Constraints\Contains;
 use OAS\Validator\Constraints\DependentRequired;
@@ -29,7 +30,6 @@ use OAS\Validator\Constraints\Required;
 use OAS\Validator\Constraints\Schema;
 use OAS\Validator\Constraints\Type;
 use OAS\Validator\Constraints\UniqueItems;
-use Symfony\Component\Validator\Constraints\Unique;
 
 return [
     AdditionalItems::UNEXPECTED_ITEM_MESSAGE =>
@@ -143,7 +143,7 @@ return [
         . '|Wymagane atrybuty {{ required_properties }} muszą być zdefiniowane'
         . '|Wymagane atrybuty {{ required_properties }} muszą być zdefiniowane',
 
-    Schema::ALWAYS_INVALID_MESSAGE =>
+    Boolean::ALWAYS_INVALID_ERROR_MESSAGE =>
         'Instancja nigdy nie pasuje do schematu',
 
     UniqueItems::NOT_UNIQUE_MESSAGE =>

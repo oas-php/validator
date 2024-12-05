@@ -3,7 +3,6 @@
 namespace OAS\Validator\Constraints;
 
 use OAS;
-use OAS\Validator\Configuration;
 use OAS\Validator\Constraint;
 
 /**
@@ -12,14 +11,16 @@ use OAS\Validator\Constraint;
 class Contains extends Constraint
 {
     const NO_ITEM_MATCHES_ERROR = 'b6771602-4c49-4047-86bf-8f51817a4d3d';
-
     const NO_ITEM_MATCHES_MESSAGE = 'No item is valid against schema';
 
-    public OAS\Schema $schema;
-
-    public function __construct(OAS\Schema $schema, string $path, Configuration $configuration)
-    {
-        $this->schema = $schema;
-        parent::__construct("{$path}/contains", $configuration);
+    public function __construct(
+        public readonly OAS\Schema|bool $schema,
+        public readonly Schema $enclosingSchemaConstraint,
+        public readonly ?Schema $referencingSchemaConstraint = null
+    ) {
+        parent::__construct(
+            "{$this->enclosingSchemaConstraint->schemaPath}/contains",
+            $this->enclosingSchemaConstraint->configuration
+        );
     }
 }

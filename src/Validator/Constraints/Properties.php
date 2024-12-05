@@ -12,9 +12,16 @@ use Symfony\Component\Validator\Constraints\Required;
  */
 class Properties extends BaseCollection
 {
-    public Configuration $configuration;
-
-    public function __construct(array $properties, string $path, Configuration $configuration)
+    /**
+     * @param array<string, OAS\Schema> $properties
+     */
+    public function __construct(
+        array $properties,
+        string $path,
+        Configuration $configuration,
+        Schema $enclosingSchemaConstraint,
+        ?Schema $referencingSchemaConstraint = null
+    )
     {
         $propertyNames = array_keys($properties);
 
@@ -22,11 +29,13 @@ class Properties extends BaseCollection
             'fields' => array_combine(
                 $propertyNames,
                 array_map(
-                    fn (string $propertyName, OAS\Schema $schema) => new Required(
+                    fn (string $propertyName, OAS\Schema|bool $schema) => new Required(
                         new Schema(
                             $schema,
                             "{$path}/properties/{$propertyName}",
-                            $configuration
+                            $configuration,
+                            $enclosingSchemaConstraint,
+                            $referencingSchemaConstraint
                         )
                     ),
                     $propertyNames,

@@ -9,7 +9,7 @@ use function OAS\Validator\{isList, equal, normalize};
 
 class UniqueItemsValidator extends ConstraintValidator
 {
-    public function validate($instance, Constraint $constraint)
+    public function validate(mixed $instance, Constraint $constraint): void
     {
         if (!$constraint instanceof UniqueItems) {
             throw new UnexpectedTypeException($constraint, UniqueItems::class);

@@ -10,28 +10,40 @@ use function OAS\Validator\isObject;
 
 class DependentSchemasValidator extends ConstraintValidator
 {
-    public function validate($instance, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof DependentSchemas) {
             throw new UnexpectedTypeException($constraint, DependentSchemas::class);
         }
 
-        if (!isObject($instance)) {
+        if (!isObject($value)) {
             return;
         }
 
-        $instance = (array) $instance;
+        $value = (array) $value;
 
         foreach ($constraint->dependentSchemas as $key => $dependentSchema) {
-            if (array_key_exists($key, $instance)) {
-                $schema = new Schema(
-                    $dependentSchema, "{$constraint->getSchemaPath()}/{$key}", $constraint->configuration
+            if (array_key_exists($key, $value)) {
+                $dependentSchemaConstraint = new Schema(
+                    $dependentSchema,
+                    "{$constraint->getSchemaPath()}/{$key}",
+                    $constraint->configuration
                 );
 
-                $this->context
+                $violations = $this->context
                     ->getValidator()
                     ->inContext($this->context)
-                    ->validate($instance, $schema);
+                    ->validate($value, $dependentSchemaConstraint)
+                    ->getViolations();
+
+                if ($violations->count() == 0) {
+                    foreach ($dependentSchemaConstraint->successfullyEvaluatedPaths as $successfullyEvaluatedPath) {
+                        $constraint
+                            ->enclosingSchemaConstraint
+                            ->successfullyEvaluatedPaths
+                            ->append($successfullyEvaluatedPath);
+                    }
+                }
             }
         }
     }

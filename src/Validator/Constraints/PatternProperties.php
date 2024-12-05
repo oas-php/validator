@@ -14,8 +14,12 @@ class PatternProperties extends Constraint
     /** @var OAS\Schema[] */
     public array $schemas;
 
-    public function __construct(array $schemas, string $path, Configuration $configuration)
-    {
+    public function __construct(
+        array $schemas,
+        string $path,
+        Configuration $configuration,
+        public readonly Schema $enclosingSchemaConstraint
+    ) {
         $this->schemas = $schemas;
         parent::__construct("{$path}/patternProperties", $configuration);
     }

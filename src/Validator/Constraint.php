@@ -6,13 +6,10 @@ use Symfony\Component\Validator\Constraint as BaseConstraint;
 
 class Constraint extends BaseConstraint implements SchemaPathAwareConstraint
 {
-    private string $schemaPath;
-    public ?Configuration $configuration;
-
-    public function __construct(string $path, Configuration $configuration = null)
-    {
-        $this->schemaPath = $path;
-        $this->configuration = $configuration;
+    public function __construct(
+        public readonly string $schemaPath,
+        public readonly ?Configuration $configuration = null
+    ) {
         parent::__construct();
     }
 

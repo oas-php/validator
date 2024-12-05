@@ -9,12 +9,12 @@ class SchemaConformanceFailure extends \Exception
 {
     /** @var mixed */
     private $instance;
-    private Schema $schema;
+    private Schema|bool $schema;
     private ConstraintViolationListInterface $violations;
 
     public function __construct(
         $instance,
-        Schema $schema,
+        Schema|bool $schema,
         ConstraintViolationListInterface $violations
     ) {
         parent::__construct(__CLASS__);
@@ -28,7 +28,7 @@ class SchemaConformanceFailure extends \Exception
         return $this->instance;
     }
 
-    public function getSchema(): Schema
+    public function getSchema(): Schema|bool
     {
         return $this->schema;
     }

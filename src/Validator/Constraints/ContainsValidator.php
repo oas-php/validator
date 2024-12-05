@@ -2,7 +2,7 @@
 
 namespace OAS\Validator\Constraints;
 
-use OAS\Validator;
+use OAS\Validator\Symfony\Validator;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -10,40 +10,50 @@ use function OAS\Validator\isList;
 
 class ContainsValidator extends ConstraintValidator
 {
-    public function validate($items, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof Contains) {
             throw new UnexpectedTypeException($constraint, Contains::class);
         }
 
-        if (!isList($items)) {
+        if (!isList($value)) {
             return;
         }
 
+        $isValid = false;
         $nestedViolations = [];
         $context = $this->context;
         $containsSchema = new Schema(
-            $constraint->schema, '#', $constraint->configuration
+            $constraint->schema,
+            '#',
+            $constraint->configuration,
+            $constraint->enclosingSchemaConstraint,
+            $constraint->referencingSchemaConstraint
         );
 
-        foreach ($items as $item) {
-            $violations = $context->getValidator()->validate($item, $containsSchema);
+        foreach ($value as $key => $item) {
+            $violations = $context
+                ->getValidator()
+                ->startContext()
+                ->atPath("[$key]")
+                ->validate($item, $containsSchema)
+                ->getViolations();
 
-            if ($violations->count() === 0) {
-                return;
+            if ($violations->count() == 0) {
+                $isValid = true;
+            } else {
+                $nestedViolations[] = $violations;
             }
-
-            $nestedViolations[] = $violations;
         }
 
-        $constraintViolationBuilder = $context
-            ->buildViolation(Contains::NO_ITEM_MATCHES_MESSAGE)
-            ->setCode(Contains::NO_ITEM_MATCHES_ERROR);
+        if (!$isValid) {
+            $constraintViolationBuilder = $context->buildViolation(Contains::NO_ITEM_MATCHES_MESSAGE);
+            assert($constraintViolationBuilder instanceof Validator\ConstraintViolationBuilder);
 
-        if ($constraintViolationBuilder instanceof Validator\ConstraintViolationBuilder) {
-            $constraintViolationBuilder->setNestedConstraintViolations($nestedViolations);
+            $constraintViolationBuilder
+                ->setCode(Contains::NO_ITEM_MATCHES_ERROR)
+                ->setNestedConstraintViolations($nestedViolations)
+                ->addViolation();
         }
-
-        $constraintViolationBuilder->addViolation();
     }
 }

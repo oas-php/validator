@@ -11,21 +11,21 @@ use function OAS\Validator\isList;
 
 class AdditionalItemsValidator extends ConstraintValidator
 {
-    public function validate($items, Constraint $constraint): void
+    public function validate($value, Constraint $constraint): void
     {
         if (!$constraint instanceof AdditionalItems) {
             throw new UnexpectedTypeException($constraint, AdditionalItems::class);
         }
 
-        if (!isList($items) || $constraint->additionalItemsSchema->isAlwaysValid()) {
+        if (!isList($value) || ($constraint->additionalItemsSchema === true)) {
             return;
         }
 
-        if (count($items) > $constraint->tupleLength) {
-            $additionalItems = array_slice($items, $constraint->tupleLength, null, true);
+        if (count($value) > $constraint->tupleLength) {
+            $additionalItems = array_slice($value, $constraint->tupleLength, null, true);
             $context = $this->context;
 
-            if ($constraint->additionalItemsSchema->isAlwaysInvalid()) {
+            if ($constraint->additionalItemsSchema === false) {
                 foreach ($additionalItems as $index => $item) {
                     $context
                         ->buildViolation(AdditionalItems::UNEXPECTED_ITEM_MESSAGE)

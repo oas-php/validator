@@ -8,13 +8,16 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 
 class NotValidator extends ConstraintValidator
 {
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof Not) {
             throw new UnexpectedTypeException($constraint, Not::class);
         }
 
-        $schema = new Schema($constraint->schema, '#', $constraint->configuration);
+        $schema = new Schema(
+            $constraint->schema,
+            configuration: $constraint->configuration
+        );
 
         $violations = $this->context->getValidator()->validate($value, $schema);
 

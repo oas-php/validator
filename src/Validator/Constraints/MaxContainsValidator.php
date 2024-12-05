@@ -2,7 +2,7 @@
 
 namespace OAS\Validator\Constraints;
 
-use OAS\Validator;
+use OAS\Validator\Symfony\Validator;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;

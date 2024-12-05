@@ -1,0 +1,38 @@
+
+consider new validator api
+// validator->validate($schema, $instance): array<violation> / obj(array<violation, getViolations, isValid)
+// validator->assertValid($schema, $instance): void
+
+
+
+may dynamicRef point to anchor?
+YES:
+{
+  "$id": "https://json-schema.hyperjump.io/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$dynamicRef": "#dynamic",
+  "$defs": {
+    "foo": {
+      "$anchor": "dynamic",
+      "type": "string"
+    }
+  }
+}
+
+
+may ref point to dynamicAnchor?
+YES:
+{
+  "$id": "https://json-schema.hyperjump.io/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#dynamic",
+  "$defs": {
+    "foo": {
+      "$dynamicAnchor": "dynamic",
+      "type": "string"
+    }
+  }
+}
+
+if the value of $dynamicRef is not an anchor (#{anchor-identifier}) then should it behave as $ref?
+what's "bookending requirement"?

@@ -2,6 +2,7 @@
 
 namespace OAS\Validator\Constraints;
 
+use ArrayObject;
 use OAS;
 use OAS\Validator\Configuration;
 use OAS\Validator\Constraint;
@@ -12,14 +13,17 @@ use OAS\Validator\Constraint;
 class AnyOf extends Constraint
 {
     const NONE_SCHEMAS_MATCHED_ERROR = 'ce9ad211-b5f3-4c49-a4b3-946553f006c8';
-
     const NONE_SCHEMAS_MATCHED_MESSAGE = 'Instance is not valid against any schema';
 
     /** @var OAS\Schema[] */
     public array $schemas;
 
-    public function __construct(array $schemas, string $path, Configuration $configuration)
-    {
+    public function __construct(
+        array $schemas,
+        string $path,
+        Configuration $configuration,
+        public ArrayObject $successfullyEvaluatedPaths
+    ) {
         $this->schemas = $schemas;
         parent::__construct("$path/anyOf", $configuration);
     }

@@ -12,8 +12,7 @@ class MaxItems extends Count implements SchemaPathAwareConstraint
 {
     const TOO_MANY_ERROR = Count::TOO_MANY_ERROR;
 
-    const TOO_MANY_MESSAGE = 'This collection should contain at most one item'
-                            . 'This collection should contain at most {{ limit }} items';
+    const TOO_MANY_MESSAGE =  'This collection should contain at most {{ limit }} items';
 
     public string $path;
 

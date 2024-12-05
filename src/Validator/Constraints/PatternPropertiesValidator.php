@@ -24,7 +24,10 @@ class PatternPropertiesValidator extends ConstraintValidator
 
         foreach ($constraint->schemas as $pattern => $schema) {
             $schema = new Schema(
-                $schema, "{$constraint->getSchemaPath()}/{$pattern}", $constraint->configuration
+                $schema,
+                "{$constraint->getSchemaPath()}/{$pattern}",
+                $constraint->configuration,
+                $constraint->enclosingSchemaConstraint
             );
 
             foreach ($instance as $propertyName => $value) {

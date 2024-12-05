@@ -8,11 +8,11 @@ use OAS\Validator\Constraint;
 
 class PropertyNames extends Constraint
 {
-    public OAS\Schema $schema;
+    public OAS\Schema|bool $schema;
 
     public string $path;
 
-    public function __construct(OAS\Schema $schema, string $path, Configuration $configuration)
+    public function __construct(OAS\Schema|bool $schema, string $path, Configuration $configuration)
     {
         $this->schema = $schema;
         parent::__construct("{$path}/propertyNames", $configuration);

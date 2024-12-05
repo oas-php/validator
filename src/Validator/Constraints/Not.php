@@ -12,12 +12,11 @@ use OAS\Validator\Constraint;
 class Not extends Constraint
 {
     const INSTANCE_MATCHES_SCHEMA_ERROR = 'e98f991f-e856-48ab-872b-5ffc60d31cb3';
-
     const INSTANCE_MATCHES_SCHEMA_MESSAGE = 'Instance is valid against schema';
 
-    public OAS\Schema $schema;
+    public OAS\Schema|bool $schema;
 
-    public function __construct(OAS\Schema $schema, string $path, Configuration $configuration)
+    public function __construct(OAS\Schema|bool $schema, string $path, Configuration $configuration)
     {
         $this->schema = $schema;
         parent::__construct("{$path}/not", $configuration);

@@ -2,6 +2,7 @@
 
 namespace OAS\Validator\Constraints;
 
+use OAS\Schema;
 use OAS\Validator\Constraint;
 
 /**
@@ -10,13 +11,12 @@ use OAS\Validator\Constraint;
 class Type extends Constraint
 {
     const INVALID_TYPE_ERROR = '38d57100-784b-4b0a-8196-4045efa17f98';
-
     const INVALID_TYPE_MESSAGE = 'Invalid type: expected "{{ expected }}" but got "{{ actual }}"';
 
-    /** @var string[]|string */
-    public $type;
+    /** @var Schema\Type|array<int,Schema\Type > $type */
+    public Schema\Type|array $type;
 
-    public function __construct($type, string $path)
+    public function __construct(Schema\Type|array $type, string $path)
     {
         $this->type = $type;
         parent::__construct("{$path}/type");

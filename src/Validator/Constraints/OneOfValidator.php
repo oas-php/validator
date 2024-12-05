@@ -2,7 +2,7 @@
 
 namespace OAS\Validator\Constraints;
 
-use OAS\Validator;
+use OAS\Validator\Symfony\Validator;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -10,36 +10,53 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 
 class OneOfValidator extends ConstraintValidator
 {
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof OneOf) {
             throw new UnexpectedTypeException($constraint, OneOf::class);
         }
 
         $nestedViolations = [];
+        $successfullyEvaluatedPaths = [];
         $context = $this->context;
 
         foreach ($constraint->schemas as $index => $schema) {
-            $schemaConstraint = new Schema($schema, '#', $constraint->configuration);
+            $schemaConstraint = new Schema(
+                $schema,
+                configuration: $constraint->configuration
+            );
             $violations = $context->getValidator()->validate($value, $schemaConstraint);
 
             if ($violations->count() > 0) {
                 $nestedViolations[$index] = $violations;
+            } else {
+                $successfullyEvaluatedPaths = array_merge(
+                    $successfullyEvaluatedPaths,
+                    $schemaConstraint->successfullyEvaluatedPaths->getArrayCopy()
+                );
             }
         }
 
         $matchedSchemas = count($constraint->schemas) - count($nestedViolations);
 
-        if (0 == $matchedSchemas) {
+        if ($matchedSchemas == 0) {
             $this->addViolation(
                 $context,
                 OneOf::NONE_SCHEMAS_MATCHED_MESSAGE,
                 OneOf::NONE_SCHEMAS_MATCHED_ERROR,
                 $nestedViolations,
             );
-        }
+        } elseif ($matchedSchemas == 1) {
+            foreach ($successfullyEvaluatedPaths as $successfullyEvaluatedPath) {
+                $constraint->enclosingSchemaConstraint
+                    ->successfullyEvaluatedPaths
+                    ->append($successfullyEvaluatedPath);
 
-        if ($matchedSchemas > 1) {
+                $constraint->referencingSchemaConstraint
+                    ?->successfullyEvaluatedPaths
+                    ->append($successfullyEvaluatedPath);
+            }
+        } else {
             $matchedSchemaIndexes = array_diff(
                 array_keys($constraint->schemas),
                 array_keys($nestedViolations)

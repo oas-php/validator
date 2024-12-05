@@ -2,6 +2,7 @@
 
 namespace OAS\Validator\Constraints;
 
+use stdClass;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -15,40 +16,27 @@ class TypeValidator extends ConstraintValidator
     public function __construct()
     {
         $this->validationFunctions = [
-            'null'    => 'is_null',
-            'boolean' => 'is_bool',
-            'string'  => 'is_string',
-            'integer' => fn ($value) => is_integer($value) || isZeroDecimalFloat($value),
-            'number'  => fn ($value) => isNumber($value),
-            'array'   => fn ($value) => isList($value),
-            'object'  => fn ($value) => $value instanceof \stdClass || isMap($value)
+            Schema\Type::NULL->value    => 'is_null',
+            Schema\Type::BOOLEAN->value => 'is_bool',
+            Schema\Type::STRING->value  => 'is_string',
+            Schema\Type::INTEGER->value => fn ($value) => is_integer($value) || isZeroDecimalFloat($value),
+            Schema\Type::NUMBER->value  => fn ($value) => isNumber($value),
+            Schema\Type::ARRAY->value   => fn ($value) => isList($value),
+            Schema\Type::OBJECT->value  => fn ($value) => $value instanceof stdClass || isMap($value)
         ];
     }
 
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof Type) {
             throw new UnexpectedTypeException($constraint, Type::class);
         }
 
-        $types = (array) $constraint->type;
+        $allowedTypes = is_array($constraint->type) ? $constraint->type : [$constraint->type];
 
-        foreach ($types as $type) {
-            $type = strtolower($type);
-
-            if (!array_key_exists($type, $this->validationFunctions)) {
-                // this should never happen as OAS\Schema::getType ensures
-                // only supported types are set
-                throw new \LogicException(
-                    sprintf(
-                        'Type %s is not supported (supported types are: %s)',
-                        $type,
-                        join('|', Schema::TYPES)
-                    )
-                );
-            }
-
-            if (call_user_func($this->validationFunctions[$type], $value)) {
+        /** @var Schema\Type $type */
+        foreach ($allowedTypes as $allowedType) {
+            if (call_user_func($this->validationFunctions[$allowedType->value], $value)) {
                 return;
             }
         }
@@ -56,12 +44,20 @@ class TypeValidator extends ConstraintValidator
         $this->context->buildViolation(Type::INVALID_TYPE_MESSAGE)
             ->setCode(Type::INVALID_TYPE_ERROR)
             ->setParameter('{{ actual }}', $this->formatTypeOf($value))
-            ->setParameter('{{ expected }}', implode('|', $types))
+            ->setParameter('{{ expected }}', $this->formatAllowedTypes($allowedTypes))
             ->addViolation();
     }
 
     protected function formatTypeOf($value): string
     {
         return isObject($value) ? 'object' : parent::formatTypeOf($value);
+    }
+
+    /**
+     * @param array<int, Schema\Type> $allowedTypes
+     */
+    private function formatAllowedTypes(array $allowedTypes): string
+    {
+        return implode('|', array_map(fn (Schema\Type $type) => $type->value, $allowedTypes));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace OAS\Validator;
 
+use stdClass;
 use function iter\all;
 
 function isNumber($value): bool
@@ -9,29 +10,20 @@ function isNumber($value): bool
     return is_integer($value) || is_float($value);
 }
 
-/**
- * empty array is not considered a map
- *
- * @param $value
- * @return bool
- */
-function isMap($value): bool
+function isMap(mixed $value): bool
 {
     return is_array($value) && !empty($value) && all('is_string', array_keys($value));
 }
 
-function isObject($value): bool
+function isObject(mixed $value): bool
 {
-    return $value instanceof \stdClass || isMap($value);
+    return $value instanceof stdClass || isMap($value);
 }
 
 /**
- * empty array is considered a list
- *
- * @param $value
- * @return bool
+ * an empty array is considered a list
  */
-function isList($value): bool
+function isList(mixed $value): bool
 {
     return is_array($value) && all('is_integer', array_keys($value));
 }
@@ -51,7 +43,7 @@ function extract(array $keys, array $map): array
     return array_reduce(
         $keys,
         function ($subHashMap, $key) use ($map) {
-            if (\array_key_exists($key, $map)) {
+            if (array_key_exists($key, $map)) {
                 $subHashMap[$key] = $map[$key];
             }
 
@@ -61,7 +53,7 @@ function extract(array $keys, array $map): array
     );
 }
 
-function equal($valueA, $valueB): bool
+function equal(mixed $valueA, mixed $valueB): bool
 {
     if (is_null($valueA)) {
         return is_null($valueB);
@@ -79,14 +71,14 @@ function equal($valueA, $valueB): bool
         return $valueA === $valueB;
     }
 
-    if ($valueA instanceof \stdClass) {
+    if ($valueA instanceof stdClass) {
         return equalObjects($valueA, $valueB);
     }
 
     return equalLists($valueA, $valueB);
 }
 
-function normalize($value)
+function normalize(mixed $value): mixed
 {
     if (is_array($value)) {
         $value = array_map(fn ($v) => normalize($v), $value);
@@ -100,19 +92,15 @@ function normalize($value)
 
 /**
  * according to spec: 1 == 1.0
- *
- * @param int|float $valueA
- * @param int|float $valueB
- * @return bool
- */
-function equalNumbers($valueA, $valueB): bool
+*/
+function equalNumbers(mixed $valueA, mixed $valueB): bool
 {
     return isNumber($valueA) && isNumber($valueB) && $valueA == $valueB;
 }
 
-function equalObjects($valueA, $valueB): bool
+function equalObjects(mixed $valueA, mixed $valueB): bool
 {
-    if ($valueA instanceof \stdClass && $valueB instanceof \stdClass) {
+    if ($valueA instanceof stdClass && $valueB instanceof stdClass) {
         $valueA = (array) $valueA;
         $valueB = (array) $valueB;
 
@@ -125,7 +113,7 @@ function equalObjects($valueA, $valueB): bool
     return false;
 }
 
-function equalLists($valueA, $valueB): bool
+function equalLists(mixed $valueA, mixed $valueB): bool
 {
     if (isList($valueA) && isList($valueB)) {
         if (count($valueA) != count($valueB)) {
@@ -143,4 +131,9 @@ function equalArrays(array $a, array $b): bool
     return all(
         fn ($values) => equal($values[0], $values[1]), zip($a, $b)
     );
+}
+
+function normalizePropertyPath(string $propertyPath): string
+{
+    return empty($propertyPath) ? '#/' : str_replace(['][', '[', ']'], ['/', '#/', ''], $propertyPath);
 }

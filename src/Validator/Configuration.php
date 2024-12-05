@@ -11,23 +11,16 @@ use OAS\Validator\Constraints\Format\Uri;
 use OAS\Validator\Constraints\Format\Uuid;
 use Symfony\Component\Validator\Constraint as BaseConstraint;
 
-
 class Configuration
 {
     const ON_UNSUPPORTED_FORMAT_DO_NOTHING = 0;
-
     const ON_UNSUPPORTED_FORMAT_TRIGGER_WARNING = 1;
-
     const ON_UNSUPPORTED_FORMAT_THROW_EXCEPTION = 2;
-
     const ON_UNSUPPORTED_FORMAT_FAIL_VALIDATION = 3;
 
     public bool $stopOnFirstError;
-
     public int $unsupportedFormatBehaviour;
-
     public bool $yieldFormatSpecificError;
-
     public int $multipleOfScale;
 
     /**

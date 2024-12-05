@@ -12,17 +12,16 @@ use OAS\Validator\Constraint;
 class AdditionalItems extends Constraint
 {
     const UNEXPECTED_ITEM_ERROR = '409b5914-ade5-4d1c-a883-7788532c5866';
-
     const UNEXPECTED_ITEM_MESSAGE = 'Index {{ index }} has not been defined and additional items are not allowed';
 
     public int $tupleLength;
 
-    public OAS\Schema $additionalItemsSchema;
+    public OAS\Schema|bool $additionalItemsSchema;
 
-    public function __construct(OAS\Schema $additionalItemsSchema, int $tupleLength, string $path, Configuration $configuration)
+    public function __construct(OAS\Schema|bool $additionalItemsSchema, int $tupleLength, string $pathPrefix, Configuration $configuration)
     {
         $this->tupleLength = $tupleLength;
         $this->additionalItemsSchema = $additionalItemsSchema;
-        parent::__construct("{$path}/additionalItems", $configuration);
+        parent::__construct("{$pathPrefix}/additionalItems", $configuration);
     }
 }

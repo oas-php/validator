@@ -11,22 +11,16 @@ use OAS\Validator\Constraint;
  */
 class IfThenElse extends Constraint
 {
-    public OAS\Schema $ifSchema;
-
-    public ?OAS\Schema $thenSchema;
-
-    public ?OAS\Schema $elseSchema;
-
     public function __construct(
-        OAS\Schema $ifSchema,
-        ?OAS\Schema $thenSchema,
-        ?OAS\Schema $elseSchema,
-        string $path,
-        Configuration $configuration
+        public readonly OAS\Schema|bool $ifSchema,
+        public readonly OAS\Schema|bool|null $thenSchema,
+        public readonly OAS\Schema|bool|null $elseSchema,
+        public readonly Schema $enclosingSchemaConstraint,
+        public readonly ?Schema $referencingSchemaConstraint = null
     ) {
-        $this->ifSchema = $ifSchema;
-        $this->thenSchema = $thenSchema;
-        $this->elseSchema = $elseSchema;
-        parent::__construct($path, $configuration);
+        parent::__construct(
+            "{$this->enclosingSchemaConstraint->schemaPath}",
+            $this->enclosingSchemaConstraint->configuration
+        );
     }
 }

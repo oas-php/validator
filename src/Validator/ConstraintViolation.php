@@ -2,6 +2,7 @@
 
 namespace OAS\Validator;
 
+use LogicException;
 use Symfony\Component\Validator\Constraint as BaseConstraint;
 use Symfony\Component\Validator\ConstraintViolation as BaseConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
@@ -53,16 +54,13 @@ class ConstraintViolation extends BaseConstraintViolation
 
     public function getInstancePath(): string
     {
-        return $this->formatInstancePath(
-            empty($propertyPath = $this->getPropertyPath())
-                ? '#/' : $propertyPath
-        );
+        return normalizePropertyPath($this->getPropertyPath());
     }
 
     public function getSchemaPath(): string
     {
         if (!$this->constraint instanceof SchemaPathAwareConstraint) {
-            throw new \LogicException(
+            throw new LogicException(
                 sprintf(
                     '%s should be instantiated with constraint violation which implements %s',
                     __CLASS__,

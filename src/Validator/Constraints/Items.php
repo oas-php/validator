@@ -2,7 +2,7 @@
 
 namespace OAS\Validator\Constraints;
 
-use OAS\Validator\Configuration;
+use OAS;
 use OAS\Validator\Constraint;
 
 /**
@@ -10,12 +10,13 @@ use OAS\Validator\Constraint;
  */
 class Items extends Constraint
 {
-    /** @var \OAS\Schema|\OAS\Schema[] */
-    public $schemas;
-
-    public function __construct($schemas, string $path, Configuration $configuration)
-    {
-        $this->schemas = $schemas;
-        parent::__construct("$path/items", $configuration);
+    public function __construct(
+        public readonly OAS\Schema|bool $schema,
+        public readonly Schema $enclosingSchemaConstraint
+    ) {
+        parent::__construct(
+            "{$this->enclosingSchemaConstraint->schemaPath}/items",
+            $this->enclosingSchemaConstraint->configuration
+        );
     }
 }

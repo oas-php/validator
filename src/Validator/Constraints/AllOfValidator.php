@@ -2,28 +2,38 @@
 
 namespace OAS\Validator\Constraints;
 
-use OAS\Validator\ConstraintViolationBuilder;
+use OAS\Validator\Symfony\ConstraintViolationBuilder;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 
 class AllOfValidator extends ConstraintValidator
 {
-    public function validate($instance, Constraint $constraint)
+    public function validate(mixed $instance, Constraint $constraint): void
     {
         if (!$constraint instanceof AllOf) {
             throw new UnexpectedTypeException($constraint, AllOf::class);
         }
 
         $nestedViolations = [];
+        $successfullyEvaluatedPaths = [];
         $context = $this->context;
 
         foreach ($constraint->schemas as $index => $schema) {
-            $schemaConstraint = new Schema($schema, '#', $constraint->configuration);
+            $schemaConstraint = new Schema(
+                $schema,
+                '#',
+                $constraint->configuration
+            );
             $violations =  $context->getValidator()->validate($instance, $schemaConstraint);
 
             if ($violations->count() > 0) {
                 $nestedViolations[$index] = $violations;
+            } else {
+                $successfullyEvaluatedPaths = array_merge(
+                    $successfullyEvaluatedPaths,
+                    $schemaConstraint->successfullyEvaluatedPaths->getArrayCopy()
+                );
             }
         }
 
@@ -42,6 +52,10 @@ class AllOfValidator extends ConstraintValidator
             }
 
             $constraintViolationBuilder->addViolation();
+        } else {
+            foreach ($successfullyEvaluatedPaths as $successfullyEvaluatedPath) {
+                $constraint->successfullyEvaluatedPaths->append($successfullyEvaluatedPath);
+            }
         }
     }
 }
