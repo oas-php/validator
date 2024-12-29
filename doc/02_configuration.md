@@ -21,7 +21,7 @@
    
    /** @var $uriFactory Psr\Http\Message\UriFactoryInterface */
     $uriFactory = ...
-    /** @var $decoder OAS\Resolver\DecoderInterface $decoder */
+    /** @var $decoder OAS\Resolver\Decoder $decoder */
     $decoder = ...
     /** @var  $cache Psr\SimpleCache\CacheInterface $cache */
     $cache = ...
@@ -38,11 +38,11 @@
 * **Decoder**
 
     The resolver needs a decoder to transform documents into PHP terms. You can go with default one which supports **json** (if `ext-json` is available) and **yaml** (if `symfony/yaml` package is installed) formats:
-    
+
     ```PHP
-    use OAS\Resolver\Factory\DecoderFactory;
+    use OAS\Resolver\Decoder\Factory;
   
-    $decoder = DecoderFactory::create();
+    $decoder = Factory::create();
     ```  
     You skip this parameter (by passing `null`) if you alright with the default option.
     

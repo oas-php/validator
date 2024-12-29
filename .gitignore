@@ -2,4 +2,6 @@ vendor
 examples
 test.php
 .idea
+.DS_Store
 .bash_history
+tmp

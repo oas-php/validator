@@ -1,0 +1,9 @@
+{
+    "type": "integer",
+    "$ref": "./b.json",
+    "$defs": {
+        "c": {
+            "$ref": "./a.json"
+        }
+    }
+}

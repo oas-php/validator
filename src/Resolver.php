@@ -1,157 +1,219 @@
 <?php declare(strict_types=1);
 
-namespace OAS\Resolver;
+namespace OAS;
 
-use OAS\Resolver\Factory\TreeFactory;
-use OAS\Resolver\Graph\Node;
-use OAS\Resolver\Graph\ReferenceNode;
-use Psr\Http\Message\UriInterface;
+use OAS\Resolver\Configuration;
+use OAS\Resolver\DecodingError;
+use OAS\Resolver\FetchingError;
+use OAS\Resolver\Node;
+use OAS\Resolver\Reference;
+use OAS\Resolver\UndecodableRefError;
+use OAS\Resolver\UnreachableAnchorError;
+use OAS\Resolver\UnreachableFragmentError;
+use OAS\Resolver\UnreachableRefError;
+use OAS\Resolver\Uri;
+use stdClass;
+use function iter\reduce;
 
+// TODO: improve caching
+//  - implement simple array-based caching
+//  - implement clear method to clear caching
 class Resolver
 {
     private Configuration $configuration;
-
-    private TreeFactory $treeFactory;
-
+    private Node\Factory $nodeFactory;
     /** @var array<string, Node> */
-    private array $resolved = [];
+    private array $fetched = [];
 
-    public function __construct(Configuration $configuration = null)
+    public function __construct(?Configuration $configuration = null)
     {
         $this->configuration = $configuration ?? new Configuration();
-        $this->treeFactory = new TreeFactory($this->configuration->getUriFactory());
-    }
-
-    public function configuration(): Configuration
-    {
-        return $this->configuration;
+        $this->nodeFactory = new Node\Factory();
     }
 
     public function resolve(string $uri): Node
     {
-        $this->resolved = [];
-
         return $this->doResolve(
-            $this->createUri($uri)
+            new Uri($uri)
         );
     }
 
     public function resolveDecoded($decoded, string $uri = null): Node
     {
-        $uri = $this->createUri($uri ?? getcwd());
-        $root = $this->treeFactory->create($decoded, $uri);
-        $this->resolved[(string) $uri->withFragment('')] = $root;
+        $uri = new Uri($uri ?? getcwd());
+        $root = $this->nodeFactory->create($decoded, $uri);
 
-        return $this->doResolveRefs($root, [$root]);
+        $this->markFetched($root);
+        $this->resolveRefs($root);
+
+        return $root;
     }
 
     public function resolveEncoded(string $encoded, string $uri = null): Node
     {
-        $uri = $this->createUri($uri ?? getcwd());
-        $root = $this->treeFactory->create(
+        $uri = new Uri($uri ?? getcwd());
+        $root = $this->nodeFactory->create(
             $this->decode(
                 $encoded
             ),
             $uri
         );
-        $this->resolved[(string) $uri->withFragment('')] = $root;
 
-        return $this->doResolveRefs($root, [$root]);
+        $this->markFetched($root);
+        $this->resolveRefs($root);
+
+        return $root;
     }
 
-    private function doResolve(UriInterface $uri, array $visited = []): Node
+    public function clear(): void
     {
-        $graph = $this->treeFactory->create(
-            $this->decode(
-                $this->fetch($uri)
+        $this->fetched = [];
+        $this->configuration->cache?->clear();
+    }
+
+    private function doResolve(Uri $uri): Node
+    {
+        $uriWithoutFragment = $uri->withoutFragment();
+        $node = $this->nodeFactory->create(
+            $this->getFromCache(
+                (string) $uriWithoutFragment,
+                fn () => $this->decode(
+                    $this->fetch($uriWithoutFragment)
+                )
             ),
-            $uri
+            $uriWithoutFragment
         );
 
-        $this->resolved[(string) $uri->withFragment('')] = $graph;
+        $this->markFetched($node);
 
-        if (hasFragment($uri)) {
-            $graph = $graph->find(
-                $uri->getFragment()
-            );
+        $fragment = $uri->getFragment();
+
+        if ($fragment !== null) {
+            $node = $uri->hasAnchor()
+                ? $node->findByAnchor($fragment, (string) $uriWithoutFragment)
+                : $node->find($fragment);
         }
 
-        return $this->doResolveRefs($graph, $visited);
+        $this->resolveRefs($node);
+
+        return $node;
     }
 
-    private function doResolveRefs(Node $graph, array $visited): Node
+    /**
+     * @throws UnreachableRefError
+     * @throws UnreachableFragmentError
+     */
+    private function resolveRefs(Node $graph): void
     {
-        foreach ($graph as $node) {
-            if ($node instanceof ReferenceNode) {
-                $refUri = resolve(
-                    $this->createUri(($ref = $node->ref()) == '#' ? '#/' : $ref),
-                    $node->parent()->canonicalUri()
-                );
+        if (!$graph->isProcessed()) {
+            $graph->markAsProcessed();
 
-                $resolved = !is_null($reference = $this->resolved($refUri));
+            foreach ($graph->getUnprocessedReferenceIterator() as $reference) {
+                $reference->markAsProcessed();
+                $ref = $reference->getRef();
 
-                if ($resolved) {
-                    $node->resolve($reference, false);
-                } else {
-                    try {
-                        $node->resolve(
-                            $this->doResolve($refUri, $visited)
-                        );
-                    } catch (DecodingException $decodingException) {
-                        throw new UndecodeableRefException(
-                            $node->parent()->uri(), $refUri, $node->ref(), $decodingException
-                        );
-                    } catch (FetchingException $fetchingException) {
-                        throw new UnreachableRefException(
-                            $node->parent()->uri(), $node->ref(), $fetchingException
-                        );
-                    }
+                try {
+                    $reference->resolve(
+                        $reference instanceof Reference
+                            ? $this->resolveRef($ref->resolved)
+                            : $this->resolveDynamicRef($ref->resolved)
+                    );
+                } catch (DecodingError $decodingException) {
+                    throw new UndecodableRefError(
+                        $reference->getParent()->getUri(),
+                        $ref,
+                        $decodingException
+                    );
+                } catch (FetchingError|UnreachableAnchorError|UnreachableFragmentError $error) {
+                    throw new UnreachableRefError(
+                        // TODO: perhaps the canonical uri could be provided here?
+                        $reference->getParent()->getUri(),
+                        $ref,
+                        $error
+                    );
                 }
+            }
+        }
+    }
+
+    /**
+     * @throws UnreachableFragmentError
+     * @throws UnreachableAnchorError
+     */
+    private function resolveRef(Uri $uri): Node
+    {
+        $withoutFragment = (string) $uri->withoutFragment();
+        $fetched = $this->fetched[$withoutFragment] ?? null;
+
+        if (null !== $fetched) {
+            //$this->resolveRefs($fetched);
+            $fragment = $uri->getFragment();
+
+            if ($fragment !== null) {
+                $resolved = $uri->hasAnchor()
+                    ? $fetched->findByAnchor($fragment, $withoutFragment)
+                    : $fetched->find($fragment);
             } else {
-                $visited[] = $node;
+                $resolved = $fetched;
+            }
+
+            $this->resolveRefs($resolved);
+        } else {
+            $resolved = $this->doResolve($uri);
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * TODO: the exceptions are not actually thrown (an empty list is returned)
+     *
+     * @throws UnreachableFragmentError
+     * @throws UnreachableAnchorError
+     * @return Node|array<string, Node>
+     */
+    private function resolveDynamicRef(Uri $uri): Node|array
+    {
+        $withoutFragment = (string) $uri->withoutFragment();
+        $fragment = $uri->getFragment();
+
+        if ($uri->hasAnchor()) {
+            if (!array_key_exists($withoutFragment, $this->fetched)) {
+                $this->doResolve($uri);
+            }
+
+            $resolved = reduce(
+                fn (array $resolved, Node $node) => array_merge($resolved, $node->findAllByAnchor($fragment)),
+                // TODO: perhaps it should run on root only (then reduce would not be necessary)
+                $this->fetched,
+                []
+            );
+
+            if (count($resolved) > 0) {
+                return $resolved;
             }
         }
 
-        return $graph;
+        return $this->resolveRef($uri);
     }
 
-    protected function fetch(UriInterface $uri): string
+    private function fetch(Uri $uri): string
     {
-        $normalized = (string) realPath(
-            $uri->withFragment('')
-        );
-
-        return $this->cache(
-            'fetched_' . md5($normalized),
-            function () use ($normalized, $uri) {
-                $raw = @file_get_contents(urldecode($normalized));
-
-                if (false === $raw) {
-                    throw new FetchingException($uri, error_get_last()['message']);
-                }
-
-                return $raw;
-            }
-        );
+        return $this->configuration->fetcher->fetch((string) $uri);
     }
 
-    private function decode(string $encoded)
+    private function decode(string $encoded): null|stdClass|array|bool|int|float
     {
-        $decoder = $this->configuration->getDecoder();
-
-        return $this->cache(
-            'decoded_' . md5($encoded),
-            function () use ($decoder, $encoded) {
-                return $decoder->decode($encoded);
-            }
-        );
+        return $this->configuration->decoder->decode($encoded);
     }
 
-    private function cache(string $key, callable $getValue)
+    private function getFromCache(string $key, callable $getValue): mixed
     {
-        $cache = $this->configuration->getCache();
+        $cache = $this->configuration->cache;
 
-        if (!is_null($cache)) {
+        if ($cache !== null) {
+            $key = md5($key);
+
             if (!$cache->has($key)) {
                 $cache->set($key, call_user_func($getValue));
             }
@@ -164,19 +226,20 @@ class Resolver
         return $value;
     }
 
-    private function resolved(UriInterface $uri): ?Node
+    private function markFetched(Node $node): void
     {
-        $resolved = $this->resolved[(string) $uri->withFragment('')] ?? null;
-
-        if (null !== $resolved) {
-            return hasFragment($uri) ? $resolved->find($uri->getFragment()) : $resolved;
+        if (is_null($node->getCanonicalUri())) {
+            // TODO is ->withoutFragment necessary?
+            $this->fetched[(string) ($node->getUri()->withoutFragment())] = $node;
         }
 
-        return null;
-    }
+        /** @var Node $child */
+        foreach ($node as $child) {
+            $nodeCanonicalUri = $child->getCanonicalUri();
 
-    private function createUri(string $uri): UriInterface
-    {
-        return $this->configuration->getUriFactory()->createUri($uri);
+            if (!is_null($nodeCanonicalUri)) {
+                $this->fetched[(string) $nodeCanonicalUri] = $child;
+            }
+        }
     }
 }
